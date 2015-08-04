@@ -1,8 +1,7 @@
 Data as Medium
 ==============
 
-This is the source repo for code for the Data as Medium class. To use
-it, see Usage.
+This is the source repo for code for the Data as Medium class.
 
 Usage
 -----
