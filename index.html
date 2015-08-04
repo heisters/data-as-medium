@@ -55,8 +55,8 @@ var svg = d3.select("body").append("svg")
   .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-d3.csv("data/merged_expenditures.csv", function(error, data) {
-  var myData = [], indexes = {}, groupBy = 'CAND_NAME';
+d3.csv("data/merged_expenditures_5000.csv", function(error, data) {
+  var myData = [], indexes = {}, groupBy = 'STATE';
   for ( var i = 0; i < data.length; ++i ) {
     var group = data[ i ][ groupBy ], idx;
     if ( indexes[ group ] ) {
