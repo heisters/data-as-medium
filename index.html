@@ -55,17 +55,15 @@ var svg = d3.select("body").append("svg")
   .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-d3.csv("data/expenditures_5000.csv", function(error, data) {
-  var myData = [];
-  var indexes = {};
+d3.csv("data/merged_expenditures.csv", function(error, data) {
+  var myData = [], indexes = {}, groupBy = 'CAND_NAME';
   for ( var i = 0; i < data.length; ++i ) {
-    var state = data[i].STATE;
-    var idx;
-    if ( indexes[ state ] ) {
-      idx = indexes[ state ];
+    var group = data[ i ][ groupBy ], idx;
+    if ( indexes[ group ] ) {
+      idx = indexes[ group ];
     } else {
-      idx = indexes[ state ] = myData.length;
-      myData.push( { count: 0, state: state } );
+      idx = indexes[ group ] = myData.length;
+      myData.push( { count: 0, group: group } );
     }
 
     myData[ idx ].count++;
@@ -73,9 +71,9 @@ d3.csv("data/expenditures_5000.csv", function(error, data) {
   myData.sort( function( a, b) { return b.count - a.count; } );
 
   var max = d3.max( myData, function(d){ return d.count; } );
-  var states = myData.map( function(d) { return d.state; } );
+  var groups = myData.map( function(d) { return d.group; } );
 
-  x.domain( states );
+  x.domain( groups );
   y.domain( [0, max] );
 
   svg.append("g")
@@ -97,7 +95,7 @@ d3.csv("data/expenditures_5000.csv", function(error, data) {
       .data(myData)
     .enter().append("rect")
       .attr("class", "bar")
-      .attr("x", function(d) { return x( d.state ) } )
+      .attr("x", function(d) { return x( d.group ) } )
       .attr("width", x.rangeBand())
       .attr("y", function(d) { return y( d.count ) } )
       .attr("height", function(d) { return height - y(d.count); });

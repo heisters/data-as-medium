@@ -15,8 +15,9 @@ or
 
     brew install nodejs
 
-Then
+Then, in the same directory as this file,
 
     npm install http-server -g
     http-server .
 
+to start an HTTP server in the current directory.
