@@ -56,22 +56,13 @@ var svg = d3.select("body").append("svg")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 d3.csv("data/merged_expenditures_5000.csv", function(error, data) {
-  var myData = [], indexes = {}, groupBy = 'STATE';
-  for ( var i = 0; i < data.length; ++i ) {
-    var group = data[ i ][ groupBy ], idx;
-    if ( indexes[ group ] ) {
-      idx = indexes[ group ];
-    } else {
-      idx = indexes[ group ] = myData.length;
-      myData.push( { count: 0, group: group } );
-    }
+  var grouped = d3.nest()
+    .key( function( d ) { return d.STATE; } )
+    .entries( data )
+    .sort( function( a, b ) { return b.values.length - a.values.length; } );
 
-    myData[ idx ].count++;
-  }
-  myData.sort( function( a, b) { return b.count - a.count; } );
-
-  var max = d3.max( myData, function(d){ return d.count; } );
-  var groups = myData.map( function(d) { return d.group; } );
+  var max = d3.max( grouped, function( d ) { return d.values.length; } );
+  var groups = grouped.map( function( d ) { return d.key; } );
 
   x.domain( groups );
   y.domain( [0, max] );
@@ -92,13 +83,13 @@ d3.csv("data/merged_expenditures_5000.csv", function(error, data) {
       .text("Frequency");
 
   svg.selectAll(".bar")
-      .data(myData)
+      .data(grouped)
     .enter().append("rect")
       .attr("class", "bar")
-      .attr("x", function(d) { return x( d.group ) } )
+      .attr("x", function( d ) { return x( d.key ) } )
       .attr("width", x.rangeBand())
-      .attr("y", function(d) { return y( d.count ) } )
-      .attr("height", function(d) { return height - y(d.count); });
+      .attr("y", function( d ) { return y( d.values.length ) } )
+      .attr("height", function( d ) { return height - y( d.values.length ); });
 
 });
 
