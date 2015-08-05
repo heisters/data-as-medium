@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<link type="text/css" rel="stylesheet" href="css/colorbrewer.css"/>
+<style>
+
+.zip {
+  fill: none;
+  stroke: none;
+}
+.zip.has-data {
+}
+
+
+</style>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://d3js.org/queue.v1.min.js"></script>
+<script src="http://d3js.org/topojson.v1.min.js"></script>
+<script>
+
+var margin = {top: 20, right: 20, bottom: 30, left: 40},
+  width = 960 - margin.left - margin.right,
+  height = 500 - margin.top - margin.bottom;
+
+var svg = d3.select( "body" ).append( "svg" )
+  .attr( "width", width + margin.left + margin.right )
+  .attr( "height", height + margin.top + margin.bottom )
+  .attr( "class", "Greens" );
+
+var path = d3.geo.path()
+  , color = d3.scale.quantile().range( d3.range( 9 ) );
+
+queue()
+  .defer( d3.csv, "data/merged_expenditures.csv" )
+  .defer( d3.json, "data/zips_us_topo.json" )
+  .await( onLoaded );
+
+function onLoaded( error, data, zips ) {
+  var grouped = d3.nest()
+    .key( function( d ) { return d.ZIP_CODE; } )
+    .map( data );
+
+  var sums = [];
+  Object.keys( grouped ).forEach( function( zip ) {
+    var expnds = grouped[ zip ];
+    expnds.expenditureSum = d3.sum( expnds, function( e ) {
+      return parseInt( e.TRANSACTION_AMT );
+    } );
+    sums.push( expnds.expenditureSum );
+  } );
+  color.domain( sums );
+
+  svg.append( "g" )
+    .attr( "class", "counties" )
+    .selectAll( "path" )
+    .data( topojson.feature( zips, zips.objects.zip_codes_for_the_usa ).features )
+    .enter().append( "path" )
+      .attr( "class", function( d ) {
+        var classes = [ "zip" ];
+        var expnds = grouped[ d.properties.zip ];
+        if ( expnds ) {
+          classes.push( "has-data" );
+          classes.push( "q" + color( expnds.expenditureSum  ) + "-9" );
+        }
+        return classes.join( " " );
+      } )
+      .attr( "data-zip", function( d ) { return d.properties.zip; } )
+      .attr( "data-state", function( d ) { return d.properties.state; } )
+      .attr( "data-name", function( d ) { return d.properties.name; } )
+      .attr( "d", path );
+}
+
+</script>
