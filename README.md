@@ -1,8 +1,7 @@
 Data as Medium
 ==============
 
-This is the source repo for code for the Data as Medium class. To use
-it, you probably want to do something like this:
+This is the source repo for code for the Data as Medium class.
 
 Usage
 -----
@@ -21,3 +20,8 @@ Then, in the same directory as this file,
     http-server .
 
 to start an HTTP server in the current directory.
+
+Next
+----
+
+Take a look at [index.html](index.html) for a simple D3 example, then go over to [the data directory](data/) to poke around the data.
