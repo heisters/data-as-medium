@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+@import url(http://fonts.googleapis.com/css?family=Roboto);
+
+text {
+  font-family: Roboto;
+}
+.party-arc {
+  fill: #333;
+}
+
+.party-arc.REP {
+  fill: #D32121;
+}
+
+.party-arc.DEM {
+  fill: #2D2993;
+}
+
+.party-arc.TRUMP {
+  fill: #D3C121;
+}
+
+</style>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script>
+
+var margin = {top: 20, right: 20, bottom: 30, left: 40},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+var svg = d3.select( "body" ).append( "svg" )
+    .attr( "width", width + margin.left + margin.right )
+    .attr( "height", height + margin.top + margin.bottom );
+
+
+var keywords = [
+  { name: 'uber',       regex: /\buber\b/i },
+  { name: 'cab',        regex: /\bcab\b/i },
+  { name: 'limo',       regex: /\blimo/i },
+  { name: 'taxi',       regex: /\btaxi\b/i }
+];
+
+var x = d3.scale.ordinal()
+  .domain( keywords.map( function( k ) { return k.name; } ).sort() )
+  .rangePoints( [ margin.left, width ], 1.0 );
+
+var y = function() { return height / 2; };
+
+d3.csv( "data/merged_expenditures.csv", function( error, data ) {
+  var grouped = d3.nest()
+    // nest by the first keyword it matches
+    .key( expenditureKeyword )
+    // 2nd-level nest by party affiliation, treating TRUMP like the special man he is
+    .key( expenditureParty )
+    .rollup( function( expenditures ) {
+      return d3.sum( expenditures, function( e ) { return e.TRANSACTION_AMT; } );
+    } )
+    .entries( data )
+    .filter( function( keyword ) { return keyword.key !== "NONE"; } );
+
+  var allParties = {}
+  var maxTransactionSum = 0;
+  grouped.forEach( function( keyword ) {
+    keyword.values = keyword.values.filter( function( party ) { return party.key !== "UNAFFILIATED"; } );
+    var total = d3.sum( keyword.values, function( party ) { return party.values; } );
+    var max = d3.max( keyword.values, function( party ) { return party.values; } );
+
+    keyword.values.forEach( function( party ) {
+      party.total = total;
+      party.max = max;
+      maxTransactionSum = Math.max( maxTransactionSum, party.values );
+      allParties[ party.key ] = true;
+    } );
+  } );
+  allParties = Object.keys( allParties ).sort();
+
+  var maxRadius = width / keywords.length * 0.5;
+  var radius = d3.scale.ordinal()
+    .domain( allParties )
+    .rangeBands( [ maxRadius * 0.4, maxRadius - 20 ], 0.05 );
+
+  var angle = d3.scale.linear()
+    .domain( [ 0, 1 ] )
+    .range( [ 0, Math.PI * 2 ] );
+
+  var partyArc = d3.svg.arc()
+    .innerRadius( function( party ) { return radius( party.key ); } )
+    .outerRadius( function( party ) { return radius( party.key ) + radius.rangeBand() } )
+    .startAngle( 0 )
+    .endAngle( function( party ) { return angle( party.values / maxTransactionSum ); } );
+
+
+  var pies = svg.selectAll( ".keyword-pie" )
+    .data( grouped ).enter()
+    .append( "g" )
+      .attr( "class", "keyword-pie " )
+      .attr( "transform", function( keyword ) { return "translate( " + x( keyword.key ) + ", " + y( keyword.key ) + " )"; } )
+
+  pies.append( "text" )
+    .attr( "text-anchor", "middle" )
+    .attr( "alignment-baseline", "middle" )
+    .text( function( keyword ) { return keyword.key; } );
+
+  pies.selectAll( "path" )
+    .data( function( keyword ) { return keyword.values; } ).enter()
+    .append( "path" )
+      .attr( "d", partyArc )
+      .attr( "class", function( party ) { return "party-arc " + party.key; } );
+
+});
+
+function isTrump( expenditure ) {
+  return !! expenditure.CAND_NAME.match( /trump, donald/i );
+}
+
+function expenditureParty( expenditure ) {
+  return isTrump( expenditure ) ? "TRUMP" : ( expenditure.CMTE_PTY_AFFILIATION || "UNAFFILIATED" );
+}
+
+function expenditureKeyword( expenditure ) {
+  var keyword = "NONE";
+  for ( var i in keywords ) {
+    var k = keywords[ i ];
+    if ( expenditure.NAME.match( k.regex ) ) {
+      keyword = k.name;
+      break;
+    }
+  }
+  return keyword;
+}
+
+</script>
