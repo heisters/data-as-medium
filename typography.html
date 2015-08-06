@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+@import url(http://fonts.googleapis.com/css?family=Cardo);
+* {
+  margin: 0;
+  padding: 0;
+}
+.container {
+  width: 960px;
+  height: 600px;
+  position: relative;
+}
+p {
+  display: block;
+  font-family: Helvetica, sans;
+  font-weight: 900;
+  font-size: 20px;
+  position: absolute;
+}
+p.travel {
+  font-family: Cardo;
+}
+</style>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script>
+
+var container = d3.select( "body" ).append( "div" )
+  .attr( "class", "container" );
+
+d3.csv( "data/merged_expenditures_5000.csv", function( error, data ) {
+  var grouped = d3.nest()
+    .key( function( d ) { return d.NAME; } )
+    .sortKeys( d3.ascending )
+    .entries( data );
+
+  var maxCount = d3.max( grouped, function( d ) { return d.values.length; } );
+  var maxSum = d3.max( grouped, function( d ) {
+    var sum = d3.sum( d.values, function( dd ) {
+      return parseFloat( dd.TRANSACTION_AMT );
+    } )
+    d.sum = sum;
+    return sum;
+  } );
+
+  var left = d3.scale.linear()
+    .domain( [ 0, maxCount ] )
+    .range( [ 0, 100 ] );
+
+  var top = d3.scale.linear()
+    .domain( [ 0, maxSum ] )
+    .range( [ 0, 100 ] );
+
+  var size = d3.scale.pow()
+    .domain( [ 0, maxSum ] )
+    .range( [ 8, 50 ] )
+    .exponent( 2 );
+
+  container.selectAll( ".name" )
+    .data( grouped ).enter()
+    .append( "p" )
+      .attr( "class", function( d ) {
+        var purpose = d.values[ 0 ].PURPOSE.split( /\W/ )[0].toLowerCase();
+        return [ "name", purpose ].join( " " );
+      } )
+      .attr( "style", function( d ) {
+        var styles = [];
+        styles.push( [ "left", left( d.values.length ) + "%" ] );
+        styles.push( [ "top", top( d.sum ) + "%" ] );
+        styles.push( [ "font-size", size( d.sum ) + "px" ] );
+        return styles.map( function( s ) { return s.join(":"); } ).join(";") + ";";
+      } )
+      .text( function( d ) { return d.key; } );
+} );
+
+</script>
