@@ -1,0 +1,26 @@
+{
+  "name": "gl",
+  "version": "1.0.0",
+  "description": "GL datavis example",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "browserify": "^11.0.1",
+    "gl-buffer": "^2.1.2",
+    "gl-now": "^1.4.0",
+    "gl-shader": "^4.0.5",
+    "gl-vao": "^1.2.1",
+    "glsl-noise": "0.0.0",
+    "glslify": "^2.2.1",
+    "papaparse": "^4.1.2"
+  },
+  "browserify": {
+    "transform": [
+      "glslify"
+    ]
+  }
+}

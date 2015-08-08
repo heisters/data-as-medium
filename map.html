@@ -41,13 +41,13 @@ function onLoaded( error, data, zips ) {
     .map( data );
 
   var sums = [];
-  Object.keys( grouped ).forEach( function( zip ) {
+  for ( var zip in grouped ) {
     var expnds = grouped[ zip ];
     expnds.expenditureSum = d3.sum( expnds, function( e ) {
       return parseInt( e.TRANSACTION_AMT );
     } );
     sums.push( expnds.expenditureSum );
-  } );
+  }
   color.domain( sums );
 
   svg.append( "g" )

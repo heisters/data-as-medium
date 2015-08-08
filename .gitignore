@@ -1,2 +1,3 @@
 /data/dspltools-*
 /data/**/*.zip
+node_modules
